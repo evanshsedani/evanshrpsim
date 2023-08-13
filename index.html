@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Floating Shapes</title>
+<style>
+  body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+  }
+  canvas {
+    border: 1px solid #333;
+  }
+</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<div id="message" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; font-weight: bold; display: none;"></div>
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 600;
+  canvas.height = 400;
+
+  const shapes = [];
+
+  class Shape {
+    constructor(x, y, size, dx, dy, type, color) {
+      this.x = x;
+      this.y = y;
+      this.size = size;
+      this.dx = dx;
+      this.dy = dy;
+      this.type = type;
+      this.color = color;
+    }
+
+    draw() {
+      ctx.beginPath();
+      ctx.fillStyle = this.color;
+
+      if (this.type === 'circle') {
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      } else if (this.type === 'triangle') {
+        ctx.moveTo(this.x, this.y - this.size);
+        ctx.lineTo(this.x + this.size * Math.cos(Math.PI / 6), this.y + this.size * Math.sin(Math.PI / 3));
+        ctx.lineTo(this.x - this.size * Math.cos(Math.PI / 6), this.y + this.size * Math.sin(Math.PI / 3));
+        ctx.closePath();
+      } else {
+        ctx.fillRect(this.x - this.size, this.y - this.size, this.size * 2, this.size * 2);
+      }
+
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    update() {
+      this.x += this.dx;
+      this.y += this.dy;
+
+      if (this.x + this.size > canvas.width || this.x - this.size < 0) {
+        this.dx = -this.dx;
+      }
+
+      if (this.y + this.size > canvas.height || this.y - this.size < 0) {
+        this.dy = -this.dy;
+      }
+
+      for (const shape of shapes) {
+        if (shape !== this && this.isTouching(shape)) {
+          this.type = shape.type;
+        }
+      }
+    }
+
+    isTouching(shape) {
+      const distance = Math.sqrt((this.x - shape.x) ** 2 + (this.y - shape.y) ** 2);
+      return distance <= this.size + shape.size;
+    }
+  }
+
+  function checkWinCondition() {
+    const shapeCounts = {
+      circle: 0,
+      square: 0,
+      triangle: 0
+    };
+
+    for (const shape of shapes) {
+      shapeCounts[shape.type]++;
+    }
+
+    const maxCount = Math.max(...Object.values(shapeCounts));
+    const majorityShape = Object.keys(shapeCounts).find(shapeType => shapeCounts[shapeType] === maxCount);
+
+    document.getElementById('message').innerText = `Majority Shape: ${majorityShape}`;
+    document.getElementById('message').style.display = 'block';
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (const shape of shapes) {
+      shape.draw();
+      shape.update();
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  function init() {
+    const colors = ['#A9A9A9', '#F5DEB3', '#FF0000'];
+    const types = ['circle', 'square', 'triangle'];
+
+    for (let i = 0; i < 15; i++) {
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height;
+      const size = Math.random() * 30 + 20;
+      const dx = (Math.random() - 0.5) * 6;
+      const dy = (Math.random() - 0.5) * 6;
+      const type = types[i % 3];
+      const color = colors[i % 3];
+
+      shapes.push(new Shape(x, y, size, dx, dy, type, color));
+    }
+
+    setTimeout(() => {
+      animate();
+      setTimeout(() => {
+        checkWinCondition();
+      }, 15000);
+    }, 1000);
+  }
+
+  init();
+</script>
+</body>
+</html>
