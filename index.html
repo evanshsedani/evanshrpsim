@@ -20,7 +20,6 @@
 </head>
 <body>
 <canvas id="canvas"></canvas>
-<div id="message" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; font-weight: bold; display: none;"></div>
 <script>
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
@@ -84,24 +83,6 @@
     }
   }
 
-  function checkWinCondition() {
-    const shapeCounts = {
-      circle: 0,
-      square: 0,
-      triangle: 0
-    };
-
-    for (const shape of shapes) {
-      shapeCounts[shape.type]++;
-    }
-
-    const maxCount = Math.max(...Object.values(shapeCounts));
-    const majorityShape = Object.keys(shapeCounts).find(shapeType => shapeCounts[shapeType] === maxCount);
-
-    document.getElementById('message').innerText = `Majority Shape: ${majorityShape}`;
-    document.getElementById('message').style.display = 'block';
-  }
-
   function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -117,24 +98,29 @@
     const colors = ['#A9A9A9', '#F5DEB3', '#FF0000'];
     const types = ['circle', 'square', 'triangle'];
 
-    for (let i = 0; i < 15; i++) {
-      const x = Math.random() * canvas.width;
-      const y = Math.random() * canvas.height;
-      const size = Math.random() * 30 + 20;
-      const dx = (Math.random() - 0.5) * 6;
-      const dy = (Math.random() - 0.5) * 6;
+    for (let i = 0; i < 30; i++) {
+      const size = Math.random() * 15 + 10; // Smaller sizes
+      const dx = (Math.random() - 0.5) * 4;
+      const dy = (Math.random() - 0.5) * 4;
       const type = types[i % 3];
       const color = colors[i % 3];
 
-      shapes.push(new Shape(x, y, size, dx, dy, type, color));
+      if (i < 10) { // Circles spawn from bottom right
+        const x = canvas.width - size;
+        const y = canvas.height - size;
+        shapes.push(new Shape(x, y, size, dx, dy, type, color));
+      } else if (i < 20) { // Squares spawn from top right
+        const x = canvas.width - size;
+        const y = size;
+        shapes.push(new Shape(x, y, size, dx, dy, type, color));
+      } else { // Triangles spawn from top left
+        const x = size;
+        const y = size;
+        shapes.push(new Shape(x, y, size, dx, dy, type, color));
+      }
     }
 
-    setTimeout(() => {
-      animate();
-      setTimeout(() => {
-        checkWinCondition();
-      }, 15000);
-    }, 1000);
+    animate();
   }
 
   init();
